@@ -1,0 +1,57 @@
+Ciphers chacha20-poly1305@openssh.com
+KexAlgorithms curve25519-sha256@libssh.org
+MACs umac-128-etm@openssh.com
+
+Protocol 2
+
+Port {{ ssh_port | default('22') }}
+
+Banner /etc/ssh/banner-template
+
+PermitRootLogin {{ ssh_permit_root_login | default('no') }}
+
+{% if ssh_allowed_groups is defined %}
+AllowGroups {% for item in ssh_allowed_groups %}{{ item }} {% endfor %}
+{% endif %}
+
+AuthorizedKeysFile {{ ssh_authorized_keys_folder | default('/etc/ssh/authorized_keys/%u') }}
+
+PubkeyAuthentication {{ ssh_pubkey_authentication | default('yes') }}
+PasswordAuthentication {{ ssh_password_authentication | default('no') }}
+ChallengeResponseAuthentication {{ ssh_challegeresponse_authentication | default('no') }}
+
+AllowTCPForwarding {{ ssh_tcp_forwarding | default('no') }}
+X11Forwarding {{ ssh_x11_forwarding | default('no') }}
+PrintMotd {{ ssh_printmotd | default('no') }}
+
+AcceptEnv LANG LC_*
+
+Subsystem sftp internal-sftp
+
+{% if ssh_match_group is defined %}
+{% for item in ssh_match_group %}
+
+Match Group {{ item.name }}
+{% if (item.role is defined) and (item.role == "sftp") %}
+    PermitTTY no
+    ForceCommand internal-sftp
+{% else %}
+    AllowTCPForwarding {{ item.tcp_forwarding | default('no') }}
+    X11Forwarding {{ item.x11_forwarding | default('no') }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if ssh_match_user is defined %}
+{% for item in ssh_match_user %}
+
+Match User {{ item.name }}
+{% if (item.role is defined) and (item.role == "sftp") %}
+    PermitTTY no
+    ForceCommand internal-sftp
+{% else %}
+    AllowTCPForwarding {{ item.tcp_forwarding | default('no') }}
+    X11Forwarding {{ item.x11_forwarding | default('no') }}
+{% endif %}
+{% endfor %}
+{% endif %}

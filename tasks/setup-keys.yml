@@ -1,0 +1,29 @@
+---
+
+- name: Check folder for public keys
+  file: 
+    path: "{{ ssh_authorized_keys_folder | default('/etc/ssh/authorized_keys') }}"
+    owner: root
+    group: root
+    mode: '0755'
+    state: directory
+
+- name: Check files for each users
+  file:
+    path: "{{ ssh_authorized_keys_folder | default('/etc/ssh/authorized_keys') }}/{{ item.account }}"
+    owner: root
+    group: root
+    mode: '0644'
+    state: touch  
+  with_items:
+    - "{{ ssh_publics_keys }}"
+
+- name: test
+  lineinfile:
+    path: "{{ ssh_authorized_keys_folder | default('/etc/ssh/authorized_keys') }}/{{ item.0.account }}"
+    regexp: "{{ item.1.value }}"
+    line: "{{ item.1.value }}"
+    state: "{{ item.1.state | default('present') }}"
+  with_subelements:
+    - "{{ ssh_publics_keys }}"
+    - key

@@ -1,0 +1,4 @@
+---
+# tasks file for role-ssh
+- include_tasks: configuration.yml
+- include_tasks: setup-keys.yml
